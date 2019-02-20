@@ -1,45 +1,31 @@
 import numpy as np
 
-from Energy import Energy
-
 
 class System:
 
-    def __init__(self, particles):
+    def __init__(self, particles, energy_model):
         self.particles = particles
-        self.wave_function = 0
-        self.energy = Energy()
+        self.energy_model = energy_model
 
-    def calculate_wave_function(self, alpha, beta, a):
+        self.wave_function_value = 0
+        self.wave_function_derivative = 0
+        self.local_energy = 0
+        self.drift_force = np.zeros((len(self.particles), len(self.particles[0].position)))
 
-        wf = 1
+        self.particle_number = len(self.particles)
 
-        for i in range(len(self.particles)):
-            one_body_part = 0
-            if len(self.particles[0].position) == 1:
-                one_body_part = np.exp(- alpha * (self.particles[i].position[0] ** 2))
-            elif len(self.particles[0].position) == 2:
-                one_body_part = np.exp(- alpha * (self.particles[i].position[0] ** 2
-                                                  + self.particles[i].position[1] ** 2))
-            elif len(self.particles[0].position) == 3:
-                one_body_part = np.exp(- alpha * (self.particles[i].position[0] ** 2
-                                                  + self.particles[i].position[1] ** 2
-                                                  + beta * self.particles[i].position[2] ** 2))
+    def calculate_wave_function(self, alpha):
+        self.wave_function_value = self.energy_model.wave_function.evaluate(self.get_particle_position_array(), alpha)
 
-            for j in range(i + 1, len(self.particles)):
-                two_body_part = 1
-                distance = np.linalg.norm(self.particles[i].position - self.particles[j].position)
-                if distance <= a:
-                    two_body_part *= 0
-                else:
-                    two_body_part *= 1 - (a / distance)
+    def calculate_local_energy(self, alpha):
+        self.local_energy = self.energy_model.calculate_local_energy(self.get_particle_position_array(), alpha)
 
-                wf *= one_body_part * two_body_part
+    def calculate_drift_force(self, alpha):
+        self.drift_force = self.energy_model.calculate_drift_force(self.get_particle_position_array(), alpha)
 
-        self.wave_function = wf
-
-    def calculate_energy(self):
-        self.energy.local_energy = 0
+    def calculate_wave_function_derivative(self, alpha):
+        self.wave_function_derivative = self.energy_model.wave_function.calculate_derivative(
+            self.get_particle_position_array(), alpha)
 
     def get_particle_position_array(self):
 
