@@ -17,6 +17,8 @@ class Observables:
         self.variance = 0
         self.error = 0
 
+        self.acceptance_rate = 0
+
     def update_cumulative_quantities(self, local_energy, wave_function, wave_function_derivative):
 
         self.cumulative_energy += local_energy
@@ -27,6 +29,7 @@ class Observables:
     def finalize_averages(self, N):
         self.compute_averages(N)
         self.compute_error(N)
+        self.acceptance_rate = self.acceptance_rate / N
 
     def compute_averages(self, N):
 

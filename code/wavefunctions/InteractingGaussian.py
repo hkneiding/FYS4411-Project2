@@ -33,7 +33,29 @@ class InteractingGaussian:
 
     def calculate_gradient(self, particle_positions, alpha):
 
-        return
+        term_1 = 0
+        term_2 = 0
+
+        for i in range(len(particle_positions)):
+
+            # update term 1
+            term_1 += - 2 * alpha[0] * np.array([particle_positions[i,0], particle_positions[i,1],
+                                                 alpha[1] * particle_positions[i,2]])
+
+            for j in range(len(particle_positions)):
+
+                if i != j:
+
+                    # calculate Euclidean distance between particle i and j
+                    dij = np.linalg.norm(particle_positions[i,:] - particle_positions[j,:])
+
+                    # calculate u first derivative (distance between i and j)
+                    du_dij = self.a / (dij * (dij - self.a))
+
+                    # update term 2
+                    term_2 += (particle_positions[i,:] - particle_positions[j,:]) * du_dij / dij
+
+        return term_1 + term_2
 
     def calculate_laplacian(self, particle_positions, alpha):
 
@@ -58,9 +80,7 @@ class InteractingGaussian:
 
             for j in range(len(particle_positions)):
 
-                if i == j:
-                    continue
-                else:
+                if i != j:
 
                     # j vector
                     rj = np.array([particle_positions[j, 0],
@@ -87,9 +107,7 @@ class InteractingGaussian:
 
                     for k in range(len(particle_positions)):
 
-                        if i == k:
-                            continue
-                        else:
+                        if i != k:
 
                             # k vector
                             rk = np.array([particle_positions[k, 0],

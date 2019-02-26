@@ -10,17 +10,18 @@ class Simulation:
         self.parameters = parameters
 
     def vmc_cycle(self, initial_alpha, mc_iterations=10000, alpha_variation_iterations=10,
-                  variation_step_width_alpha=0.025, use_importance_sampling=False):
+                  variation_step_width_alpha=0.025, use_importance_sampling=False, time_step=0.001):
 
         result = []
 
         for i in range(alpha_variation_iterations):
             alpha = initial_alpha + i * variation_step_width_alpha
-            result.append(self.mc_cycle(alpha, use_importance_sampling, mc_iterations=mc_iterations))
+            result.append(self.mc_cycle(alpha, use_importance_sampling=use_importance_sampling,
+                                        mc_iterations=mc_iterations, time_step=time_step))
 
         return result
 
-    def mc_cycle(self, alpha, use_importance_sampling=False, mc_iterations=10000):
+    def mc_cycle(self, alpha,  mc_iterations=10000, use_importance_sampling=False, time_step=0.001):
 
         # set up systems
         current_system = copy.deepcopy(self.initial_system)
@@ -35,7 +36,8 @@ class Simulation:
             if use_importance_sampling:
                 current_system.calculate_drift_force(alpha)
 
-            current_system = self.mc_step(alpha, current_system, trial_system, use_importance_sampling)
+            current_system, acceptance_rate = self.mc_step(alpha, current_system, trial_system, use_importance_sampling,
+                                                           time_step=time_step)
 
             # calculate local energy of last configuration
             current_system.calculate_local_energy(alpha)
@@ -43,6 +45,7 @@ class Simulation:
             current_system.calculate_wave_function_derivative(alpha)
 
             # update averages
+            avg.acceptance_rate += acceptance_rate / current_system.particle_number
             avg.update_cumulative_quantities(current_system.local_energy, current_system.wave_function_value,
                                              current_system.wave_function_derivative)
 
@@ -51,13 +54,16 @@ class Simulation:
 
         return avg
 
-    def mc_step(self, alpha, current_system, trial_system, use_importance_sampling=False):
+    def mc_step(self, alpha, current_system, trial_system, use_importance_sampling=False, time_step=0.001):
+
+        accepted_steps = 0
 
         for j in range(current_system.particle_number):
 
             # generate trial configuration
             if use_importance_sampling:
-                trial_system.particles[j].perturb_position_importance(current_system.drift_force[j, :])
+                trial_system.particles[j].perturb_position_importance(current_system.drift_force[j, :],
+                                                                      time_step=time_step)
                 trial_system.calculate_drift_force(alpha)
             else:
                 trial_system.particles[j].perturb_position_uniformly(self.parameters.update_radius)
@@ -73,10 +79,12 @@ class Simulation:
                 acceptance_probability *= self.evaluate_greens_function(current_system.particles[j].position,
                                                                         trial_system.particles[j].position,
                                                                         current_system.drift_force[j, :],
-                                                                        trial_system.drift_force[j, :])
+                                                                        trial_system.drift_force[j, :],
+                                                                        time_step=time_step)
 
             # update configuration or roll back changes in trial configuration
             if Simulation.check_acceptance(acceptance_probability):
+                accepted_steps += 1
                 current_system.wave_function_value = trial_system.wave_function_value
                 for k in range(len(self.initial_system.particles[j].position)):
                     current_system.particles[j].position[k] = trial_system.particles[j].position[k]
@@ -84,17 +92,18 @@ class Simulation:
                 for k in range(len(self.initial_system.particles[j].position)):
                     trial_system.particles[j].position[k] = current_system.particles[j].position[k]
 
-        return current_system
+        return current_system, accepted_steps
 
-    def gradient_descent(self, initial_alpha, tolerance=10**(-6), learning_rate=0.1,
-                         mc_iterations=1000, max_iterations=25, use_importance_sampling=False):
+    def gradient_descent(self, initial_alpha, tolerance=10**(-6), learning_rate=0.1, mc_iterations=1000,
+                         max_iterations=25, use_importance_sampling=False, time_step=0.001):
 
         alpha = initial_alpha
 
         for i in range(max_iterations):
 
             # do one mc cycle
-            result = self.mc_cycle(alpha, use_importance_sampling, mc_iterations=mc_iterations)
+            result = self.mc_cycle(alpha, use_importance_sampling=use_importance_sampling,
+                                   mc_iterations=mc_iterations, time_step=time_step)
 
             # compute gradient
             local_energy_derivative = 2 * (result.wave_function_energy_average -
