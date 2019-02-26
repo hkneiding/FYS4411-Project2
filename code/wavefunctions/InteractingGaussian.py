@@ -33,10 +33,12 @@ class InteractingGaussian:
 
     def calculate_gradient(self, particle_positions, alpha):
 
-        term_1 = 0
-        term_2 = 0
+        gradient = np.zeros((len(particle_positions), len(particle_positions[0, :])))
 
         for i in range(len(particle_positions)):
+
+            term_1 = 0
+            term_2 = 0
 
             # update term 1
             term_1 += - 2 * alpha[0] * np.array([particle_positions[i,0], particle_positions[i,1],
@@ -55,7 +57,9 @@ class InteractingGaussian:
                     # update term 2
                     term_2 += (particle_positions[i,:] - particle_positions[j,:]) * du_dij / dij
 
-        return term_1 + term_2
+            gradient[i, :] = term_1 + term_2
+
+        return gradient
 
     def calculate_laplacian(self, particle_positions, alpha):
 
