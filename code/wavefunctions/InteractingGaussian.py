@@ -1,5 +1,5 @@
 import numpy as np
-
+from numba import jit
 
 class InteractingGaussian:
 
@@ -61,6 +61,7 @@ class InteractingGaussian:
 
         return gradient
 
+    @jit()
     def calculate_laplacian(self, particle_positions, alpha):
 
         term_1 = 0
