@@ -3,6 +3,7 @@ import numpy as np
 
 from Observables import Observables
 
+
 class Simulation:
 
     def __init__(self, system):
@@ -51,7 +52,7 @@ class Simulation:
 
         # finalize averages
         avg.finalize_averages(mc_iterations)
-
+        avg.final_configuration = current_system.get_particle_position_array()
         return avg
 
     def mc_step(self, alpha, current_system, trial_system, use_importance_sampling=False, update_radius=1,

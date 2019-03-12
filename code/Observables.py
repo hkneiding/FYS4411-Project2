@@ -15,6 +15,7 @@ class Observables:
         self.wave_function_energy_average = 0
 
         self.energy_trajectory = []
+        self.final_configuration = np.zeros((1,1))
 
         self.variance = 0
         self.error = 0
