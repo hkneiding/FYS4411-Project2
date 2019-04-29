@@ -14,18 +14,18 @@ class System:
 
         self.particle_number = len(self.particles)
 
-    def calculate_wave_function(self, alpha):
-        self.wave_function_value = self.energy_model.wave_function.evaluate(self.get_particle_position_array(), alpha)
+    def calculate_wave_function(self):
+        self.wave_function_value = self.energy_model.wave_function.evaluate(self.get_particle_position_array().flatten())
 
-    def calculate_local_energy(self, alpha):
-        self.local_energy = self.energy_model.calculate_local_energy(self.get_particle_position_array(), alpha)
+    def calculate_local_energy(self):
+        self.local_energy = self.energy_model.calculate_local_energy(self.get_particle_position_array())
 
-    def calculate_drift_force(self, alpha):
-        self.drift_force = self.energy_model.calculate_drift_force(self.get_particle_position_array(), alpha)
+    def calculate_drift_force(self):
+        self.drift_force = self.energy_model.calculate_drift_force(self.get_particle_position_array())
 
-    def calculate_wave_function_derivative(self, alpha):
+    def calculate_wave_function_derivative(self):
         self.wave_function_derivative = self.energy_model.wave_function.calculate_derivative(
-            self.get_particle_position_array(), alpha)
+            self.get_particle_position_array().flatten())
 
     def get_particle_position_array(self):
 

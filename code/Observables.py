@@ -26,8 +26,8 @@ class Observables:
 
         self.cumulative_energy += local_energy
         self.cumulative_squared_energy += local_energy ** 2
-        self.cumulative_wave_function_derivative += wave_function_derivative / wave_function
-        self.cumulative_wave_function_energy += (wave_function_derivative / wave_function) * local_energy
+        self.cumulative_wave_function_derivative += wave_function_derivative #/ wave_function
+        self.cumulative_wave_function_energy += wave_function_derivative * local_energy #/ wave_function
         self.energy_trajectory.append(local_energy)
 
     def finalize_averages(self, N):

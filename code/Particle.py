@@ -9,9 +9,13 @@ class Particle:
         self.position = position
 
     def perturb_position_uniformly(self, update_radius):
+
         d = len(self.position)
-        for i in range(0, d):
-            self.position[i] += update_radius * np.random.uniform(-0.5, 0.5)
+        i = np.random.randint(low=0, high=d)
+        self.position[i] += update_radius * np.random.uniform(-0.5, 0.5)
+
+        #for i in range(0, d):
+        #    self.position[i] += update_radius * np.random.uniform(-0.5, 0.5)
 
     def perturb_position_importance(self, drift_force, diffusion_coefficient=0.5, time_step=0.001):
 
