@@ -9,18 +9,6 @@ class Simulation:
     def __init__(self, system):
         self.system = system
 
-    def vmc_cycle(self, initial_alpha, mc_iterations=10000, alpha_variation_iterations=10,
-                  variation_step_width_alpha=0.025, use_importance_sampling=False, update_radius=1, time_step=0.001):
-
-        result = []
-
-        for i in range(alpha_variation_iterations):
-            alpha = initial_alpha + i * variation_step_width_alpha
-            result.append(self.mc_cycle(alpha, use_importance_sampling=use_importance_sampling,
-                                        mc_iterations=mc_iterations, update_radius=update_radius, time_step=time_step))
-
-        return result
-
     def mc_cycle(self, mc_iterations=10000, use_importance_sampling=False, update_radius=1, time_step=0.001, burn_in_percentage=0.1):
 
         # set up systems
@@ -46,7 +34,8 @@ class Simulation:
 
                 # update averages
                 avg.acceptance_rate += acceptance_rate
-                avg.update_cumulative_quantities(current_system.local_energy, current_system.wave_function_value, current_system.wave_function_derivative)
+                avg.update_cumulative_quantities(current_system.local_energy, current_system.wave_function_value,
+                                                 current_system.wave_function_derivative)
 
                 avg.positions.append(current_system.particles[0].position.tolist())
 

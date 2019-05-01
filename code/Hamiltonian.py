@@ -35,7 +35,6 @@ class Hamiltonian:
         return kinetic_energy
 
     def calculate_interaction_contribution(self, particle_positions):
-
         print("int")
         interaction_contribution = 0
         for i in range(len(particle_positions)):

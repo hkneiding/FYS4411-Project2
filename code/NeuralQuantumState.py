@@ -15,7 +15,8 @@ class NeuralQuantumState:
         self.b = np.zeros(self.nh)
         self.w = np.zeros((self.nx, self.nh))
 
-        self.prefactor = 1 #0.5
+        self.prefactor = 1
+        #self.prefactor = 0.5
 
         self.initialize_weights(initial_sigma)
 
@@ -50,9 +51,9 @@ class NeuralQuantumState:
             summation = 0
 
             for j in range(self.nh):
-                summation += self.w[i, j] * self.w[i, j] * derivative_sigmoid_Q[j]
+                summation += derivative_sigmoid_Q[j] * self.w[i, j] ** 2
 
-            d2_ln_psi = -1.0 / self.sigma_squared + summation / (self.sigma_squared ** 2)
+            d2_ln_psi = - 1.0 / self.sigma_squared + summation / (self.sigma_squared ** 2)
 
             d1_ln_psi *= self.prefactor
             d2_ln_psi *= self.prefactor
@@ -63,7 +64,7 @@ class NeuralQuantumState:
 
     def calculate_gradient(self, x, index):
 
-        summation = self.calculate_sigmoid_Q(x).dot(self.w[index,:])
+        summation = self.calculate_sigmoid_Q(x).dot(self.w[index, :])
         return self.prefactor * (-(x[index] - self.a[index]) / self.sigma_squared +
                                  summation / self.sigma_squared)
 
