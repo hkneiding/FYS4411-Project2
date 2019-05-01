@@ -3,11 +3,11 @@ import numpy as np
 
 class NeuralQuantumState:
 
-    def __init__(self, initial_sigma):
+    def __init__(self, initial_sigma, nx, nh, dim):
 
-        self.nx = 1
-        self.nh = 2
-        self.dim = 1
+        self.nx = nx
+        self.nh = nh
+        self.dim = dim
         self.sigma_squared = initial_sigma ** 2
 
         self.h = np.zeros(self.nh)
@@ -74,7 +74,7 @@ class NeuralQuantumState:
         d_psi = np.zeros(self.nx + self.nh + self.nx * self.nh)
 
         for i in range(self.nx):
-            d_psi[i] = x[i] - self.a[i] / self.sigma_squared
+            d_psi[i] = (x[i] - self.a[i]) / self.sigma_squared
 
         for i in range(self.nx, self.nx + self.nh):
             d_psi[i] = sigmoid_Q[i - self.nx]
