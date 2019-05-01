@@ -35,7 +35,7 @@ class Simulation:
             if i > 0.1 * mc_iterations:
 
                 # update averages
-                avg.acceptance_rate += acceptance_rate / current_system.particle_number
+                avg.acceptance_rate += acceptance_rate
                 avg.update_cumulative_quantities(current_system.local_energy, current_system.wave_function_value,
                                                  current_system.wave_function_derivative)
 
@@ -117,8 +117,8 @@ class Simulation:
                     self.system.energy_model.wave_function.w[j, l] -= learning_rate * local_energy_derivative[k]
                     k += 1
 
-            print(sum(abs(local_energy_derivative)))
-            print("Energy: " + str(result.energy_average))
+            #print(sum(abs(local_energy_derivative)))
+            #print("Energy: " + str(result.energy_average))
 
             # stop if convergence criterion satisfied
             if abs(sum(local_energy_derivative)) < tolerance:
