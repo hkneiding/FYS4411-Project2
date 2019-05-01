@@ -52,7 +52,7 @@ class NeuralQuantumState:
             for j in range(self.nh):
                 summation += self.w[i, j] * self.w[i, j] * derivative_sigmoid_Q[j]
 
-            d2_ln_psi = -1.0 / self.sigma_squared + summation / (self.sigma_squared ** 2)
+            d2_ln_psi = - 1.0 / self.sigma_squared + summation / (self.sigma_squared ** 2)
 
             d1_ln_psi *= self.prefactor
             d2_ln_psi *= self.prefactor

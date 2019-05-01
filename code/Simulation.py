@@ -9,18 +9,6 @@ class Simulation:
     def __init__(self, system):
         self.system = system
 
-    def vmc_cycle(self, initial_alpha, mc_iterations=10000, alpha_variation_iterations=10,
-                  variation_step_width_alpha=0.025, use_importance_sampling=False, update_radius=1, time_step=0.001):
-
-        result = []
-
-        for i in range(alpha_variation_iterations):
-            alpha = initial_alpha + i * variation_step_width_alpha
-            result.append(self.mc_cycle(alpha, use_importance_sampling=use_importance_sampling,
-                                        mc_iterations=mc_iterations, update_radius=update_radius, time_step=time_step))
-
-        return result
-
     def mc_cycle(self, mc_iterations=10000, use_importance_sampling=False, update_radius=1, time_step=0.001):
 
         # set up systems
