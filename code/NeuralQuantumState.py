@@ -3,11 +3,11 @@ import numpy as np
 
 class NeuralQuantumState:
 
-    def __init__(self, initial_sigma):
+    def __init__(self, initial_sigma, nx, nh, dim):
 
-        self.nx = 1
-        self.nh = 2
-        self.dim = 1
+        self.nx = nx
+        self.nh = nh
+        self.dim = dim
         self.sigma_squared = initial_sigma ** 2
 
         self.h = np.zeros(self.nh)
