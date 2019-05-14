@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import sys
 
 from Observables import Observables
 
@@ -9,7 +10,7 @@ class Simulation:
     def __init__(self, system):
         self.system = system
 
-    def mc_cycle(self, mc_iterations=10000, use_importance_sampling=False, update_radius=1, time_step=0.001, burn_in_percentage=0.1):
+    def mc_cycle(self, mc_iterations=10000, sampling="mc", update_radius=1, time_step=0.001, burn_in_percentage=0.1):
 
         # set up systems
         current_system = copy.deepcopy(self.system)
@@ -20,24 +21,24 @@ class Simulation:
 
         for i in range(mc_iterations):
 
-            if use_importance_sampling:
+            if sampling == "importance": #use_importance_sampling:
                 current_system.calculate_drift_force()
 
-            current_system, acceptance_rate = self.mc_step(current_system, copy.deepcopy(current_system), use_importance_sampling, update_radius=update_radius, time_step=time_step)
+            current_system, acceptance_rate = self.mc_step(current_system, copy.deepcopy(current_system), sampling, update_radius=update_radius, time_step=time_step)
 
             # calculate local energy of last configuration
             current_system.calculate_local_energy()
             current_system.calculate_wave_function()
             current_system.calculate_wave_function_derivative()
 
-            if i > burn_in_percentage * mc_iterations:
+            #if i > burn_in_percentage * mc_iterations:
 
-                # update averages
-                avg.acceptance_rate += acceptance_rate
-                avg.update_cumulative_quantities(current_system.local_energy, current_system.wave_function_value,
+            # update averages
+            avg.acceptance_rate += acceptance_rate
+            avg.update_cumulative_quantities(current_system.local_energy, current_system.wave_function_value,
                                                  current_system.wave_function_derivative)
 
-                avg.positions.append(current_system.particles[0].position.tolist())
+            avg.positions.append(current_system.particles[0].position.tolist())
 
         # finalize averages
         avg.finalize_averages()
@@ -48,33 +49,39 @@ class Simulation:
 
         return avg
 
-    def mc_step(self, current_system, trial_system, use_importance_sampling=False, update_radius=1, time_step=0.001):
-
+    def mc_step(self, current_system, trial_system, sampling="mc", update_radius=1, time_step=0.001):
+        """ I tried cutting down the number of if/else tests to speed things up a bit (?).
+        I also changed from use_importance-sampling = True/False to sampling= type"""
         accepted_steps = 0
 
         # randomly select a particle
         j = np.random.randint(low=0, high=current_system.particle_number)
 
         # generate trial configuration
-        if use_importance_sampling:
-            trial_system.particles[j].perturb_position_importance(current_system.drift_force[j, :],
-                                                                  time_step=time_step)
-            trial_system.calculate_drift_force()
-        else:
+        if sampling == "mc":
             trial_system.particles[j].perturb_position_uniformly(update_radius)
+            # calculate wave function of trial configuration
+            trial_system.calculate_wave_function()
+            # calculate acceptance probability 
+            acceptance_probability = trial_system.wave_function_value ** 2 / current_system.wave_function_value ** 2
+        
+        elif sampling == "importance":
+            trial_system.particles[j].perturb_position_importance(current_system.drift_force[j, :], time_step=time_step)
+            trial_system.calculate_drift_force()
+            # calculate trial wave function
+            trial_system.calculate_wave_function()
+            # calculate acceptance probablilty
+            acceptance_probability = trial_system.wave_function_value ** 2 / current_system.wave_function_value ** 2
+            acceptance_probability *= self.evaluate_greens_function(current_system.particles[j].position, trial_system.particles[j].position,current_system.drift_force[j, :], trial_system.drift_force[j, :],time_step=time_step)
 
-        # calculate wave function of trial configuration
-        trial_system.calculate_wave_function()
+        elif sampling == "gibbs":
+            #  Here, gibbs will be implemented, but I don't want to update too much at once :)
+            acceptance_probability = 1
+            print("yessda")
 
-        # calculate acceptance probability
-        acceptance_probability = trial_system.wave_function_value ** 2 / current_system.wave_function_value ** 2
+        else:
+            sys.exit("error, sampling is wrong.")
 
-        # multiply by greens function if using importance sampling
-        if use_importance_sampling:
-            acceptance_probability *= self.evaluate_greens_function(current_system.particles[j].position,
-                                                                    trial_system.particles[j].position,current_system.drift_force[j, :],
-                                                                    trial_system.drift_force[j, :],
-                                                                    time_step=time_step)
 
         # update configuration or roll back changes in trial configuration
         if Simulation.check_acceptance(acceptance_probability):
@@ -88,34 +95,27 @@ class Simulation:
 
         return current_system, accepted_steps
 
-    def stochastic_gradient_descent(self, tolerance=10**(-6), learning_rate=0.01, mc_iterations=50000, max_iterations=25, use_importance_sampling=False, update_radius=1, time_step=0.001, burn_in_percentage=0.1):
-        A = []
-        B = []
-        W = []
-        E = []
+    def stochastic_gradient_descent(self, tolerance=10**(-6), learning_rate_init=0.01, mc_iterations=50000, max_iterations=25, sampling="mc", update_radius=1, time_step=0.001, burn_in_percentage=0.1, no_iteration=111):
+        #A = []
+        #B = []
+        #W = []
+        E = np.zeros(max_iterations)
 
         for i in range(max_iterations):
+            learning_rate = (1 - 0.9*i/max_iterations) * learning_rate_init
 
-            # do one mc cycle
-            print("Iteration : ", i)
-            print("NQS:   a: ", self.system.energy_model.wave_function.a)
-            print("NQS:   b: ", self.system.energy_model.wave_function.b)
-            print("NQS:   w: ", self.system.energy_model.wave_function.w)
-
-            A.append(self.system.energy_model.wave_function.a)
-            B.append(self.system.energy_model.wave_function.b)
-            W.append(self.system.energy_model.wave_function.w)
+            #A.append(self.system.energy_model.wave_function.a)
+            #B.append(self.system.energy_model.wave_function.b)
+            #W.append(self.system.energy_model.wave_function.w)
 
 
-            result = self.mc_cycle(use_importance_sampling=use_importance_sampling, mc_iterations=mc_iterations,
-                                   update_radius=update_radius, time_step=time_step, burn_in_percentage=burn_in_percentage)
-            E.append(result.energy_average)
+            result = self.mc_cycle(sampling=sampling, mc_iterations=mc_iterations, update_radius=update_radius, time_step=time_step, burn_in_percentage=burn_in_percentage)
+            E[i] = result.energy_average
             # compute gradient
-            local_energy_derivative = 2 * (result.wave_function_energy_average -
-                                           result.wave_function_derivative_average * result.energy_average)
+            local_energy_derivative = 2 * (result.wave_function_energy_average - result.wave_function_derivative_average * result.energy_average)
 
             for j in range(self.system.energy_model.wave_function.nx):
-                self.system.energy_model.wave_function.a[j] -= learning_rate * local_energy_derivative[j]
+                self.system.energy_model.wave_function.a[j] -=  learning_rate * local_energy_derivative[j]
 
             for j in range(self.system.energy_model.wave_function.nh):
                 self.system.energy_model.wave_function.b[j] -= \
@@ -135,10 +135,10 @@ class Simulation:
             if abs(sum(local_energy_derivative)) < tolerance:
                 break
         
-        np.save("A.npy", np.array(A))
-        np.save("B.npy", np.array(B))
-        np.save("W.npy", np.array(W))
-        np.save("E.npy", np.array(E))
+        #np.save("results/A%03d.npy" % no_iteration, np.array(A))
+        #np.save("results/B%03d.npy" % no_iteration, np.array(B))
+        #np.save("results/W%03d.npy" % no_iteration, np.array(W))
+        np.save("results/E%03d.npy" % no_iteration, E)
 
         return self.system.energy_model.wave_function
 

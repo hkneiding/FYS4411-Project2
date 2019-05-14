@@ -14,15 +14,15 @@ start_time = time.time()
 particles = 1
 dimensions = 1
 
-use_importance_sampling=True
-learning_rate=0.03
+sampling="importance" #importance, mc or gibbs
+learning_rate=1.
 update_radius=0.45
-time_step=0.2
-max_iterations=50
+time_step=0.9
+max_iterations=300
 tolerance=10**(-6)
-mc_iterations = 50000
+mc_iterations = 1000
 
-burn_in_percentage = 0.08
+burn_in_percentage = 0.
 
 # Neural Quantum state input:
 initial_sigma=1
@@ -54,7 +54,7 @@ sys = System(p, h)
 
 sim = Simulation(sys)
 
-nqs_opt = sim.stochastic_gradient_descent(tolerance, learning_rate, mc_iterations, max_iterations, use_importance_sampling, update_radius, time_step, burn_in_percentage)
+nqs_opt = sim.stochastic_gradient_descent(tolerance, learning_rate, mc_iterations, max_iterations, sampling, update_radius, time_step, burn_in_percentage)
 
 end_time = time.time()
 print("Time spent: ", end_time - start_time, " seconds.")
