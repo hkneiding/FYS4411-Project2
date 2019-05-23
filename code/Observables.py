@@ -37,7 +37,7 @@ class Observables:
         self.compute_averages()
         self.compute_error()
         self.acceptance_rate = self.acceptance_rate / self.N
-        self.print_averages()
+        #self.print_averages()
 
     def compute_averages(self):
         """ Computing final averages for finalize averages """
