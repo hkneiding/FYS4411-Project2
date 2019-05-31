@@ -14,20 +14,20 @@ start_time = time.time()
 particles = 1
 dimensions = 1
 
-sampling="importance" #importance, mc or gibbs
-learning_rate=1.
+sampling="gibbs" #importance, mc or gibbs
+learning_rate=0.2
 update_radius=0.45
 time_step=0.9
-max_iterations=300
+max_iterations=50
 tolerance=10**(-6)
-mc_iterations = 1000
+mc_iterations = 50
 
 burn_in_percentage = 0.
 
 # Neural Quantum state input:
 initial_sigma=1
 nx = 1
-nh = 4
+nh = 2
 
 
 

@@ -16,7 +16,6 @@ class NeuralQuantumState:
         self.w = np.zeros((self.nx, self.nh))
 
         self.prefactor = 1
-        #self.prefactor = 0.5
 
         self.initialize_weights(initial_sigma)
 
@@ -97,8 +96,24 @@ class NeuralQuantumState:
         return 1 / (1 + np.exp(- self.calculate_Q(x)))
 
     def calculate_sigmoid_derivative_Q(self, x):
-
+        
         exp_Q = np.exp(self.calculate_Q(x))
         derivative_sigmoid_Q = exp_Q / (1 + exp_Q) ** 2
 
         return derivative_sigmoid_Q
+
+
+    def calculate_Q_gibbs(self, i):
+        
+        return self.b[i] + (((1.0 / self.sigma_squared) * self.a).transpose().dot(self.w[:,i]).transpose())
+
+    def calculate_sigmoid_Q_gibbs(self, z):
+        return 1 / (1 + np.exp(-z))
+
+    def calculate_mean_gibbs(self,j):
+
+        return self.a[j] + np.dot(self.w[j,:],self.h)
+    
+
+
+
