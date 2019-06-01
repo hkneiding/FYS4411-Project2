@@ -87,7 +87,7 @@ class Simulation:
                 else:
                     nqs.h[i] = 0
 
-            for j in range(nqs.nx):
+            for j in range(int(nqs.nx/nqs.dim)):
                 mean_x = nqs.calculate_mean_gibbs(j) 
                 current_system.particles[j].position = np.random.normal(mean_x, nqs.sigma_squared, nqs.dim)
 
